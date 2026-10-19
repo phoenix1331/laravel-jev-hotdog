@@ -40,20 +40,32 @@ Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel
 
 ## Design decisions
 
-- **Noul then Box** - Box always returns a box even when nothing is there, so Noul decides the verdict; Box runs only when confidence is above `unsure_max`. Box edges are 0 to 1 fractions, so the overlay is plain CSS percentages
+- **Noul decides, Box locates, one request** - Box always returns a box even when nothing is there, so the Noul answer decides the verdict and the box is shown only above `unsure_max`. Both questions go in one request (the pattern TypeSafe documents): the image is billed as input tokens on every request and output is free, so a second Box call would bill the image twice and add a round trip. Box edges are 0 to 1 fractions, so the overlay is plain CSS percentages
 - **Not sure band** - confidence between `unsure_min` and `unsure_max` shows a third state; confidence always shown
-- **Normalise before sending** - Jev accepts only still PNG/JPEG, 256 to 1568px per side, max 16 MiB, and rejects rather than resizes; every upload is converted and resized first
-- **Preview API** - every image request sends `TypeSafe-Danger-Zone-Images: true`; Box needs `jev-1.14.0` or `jev-preview`, so the model is pinned in config
+- **Normalise before sending** - Jev accepts only still PNG/JPEG, 280 to 1568px per side (the docs say 280, not the 256 first assumed), 78,400 to 2,458,624 total pixels, max 16 MiB, and rejects rather than resizes. It also strips EXIF without applying orientation. Every upload is rotated upright, resized and re-encoded as baseline JPEG first
+- **Preview API** - every image request sends `TypeSafe-Danger-Zone-Images: true`; images and Box need Jev 1.14 (`jev-preview` or `jev-1.14.0`; `jev-latest` is still 1.13, text only), so the model is pinned in config
 - **Bring your own key** - no key in the repo, tests, fixtures or recordings; fake mode is the default so the UI works straight after cloning
 - **Nothing stored** - uploads live in Livewire temp and are deleted after the result; logs hold only verdict, confidence and latency
 - **No show branding** - no HBO name or logo; one credit line in the README
+
+## Jev client
+
+Thin `JevClient` on Laravel's HTTP client, not a Packagist SDK. Reviewed packages:
+
+| Package | Images + Box | Notes |
+|---------|--------------|-------|
+| `phox/typesafe-sdk-php` | Yes (since v0.5.0) | Only candidate with support; single author, v0.x, three releases in three days; own Guzzle transport bypasses `Http::fake()`; static image registry |
+| `doekos/typesafe-laravel-sdk`, `butochnikov/laravel-typesafe-jev` (+ `butochnikov/typesafe-sdk-php`), `f-lombardo/jev-php`, `mzainzulifqar/jev-php-sdk`, `binnash/typesafe-sdk`, `sanmai/typesafe-ai-php`, `symfony/ai-type-safe-platform` | No | Text questions only |
+
+The app needs one endpoint, two question types and a base64 JSON body, which is a small class; owning it keeps `Http::fake()` tests and the preview header explicit. Exact request, response, limits and error codes: `.claude/docs/jev-api.md`. Recorded in the README later.
 
 ## Planned components
 
 | Component | Role |
 |-----------|------|
 | `HotdogDetector` contract | `detect(NormalisedImage): HotdogResult`; bound from `jev.fake` |
-| `JevHotdogDetector` / `FakeHotdogDetector` | Real API vs deterministic local answers (from `samples/expected.json` or image hash) |
+| `JevClient` | `POST {base_url}/systemone` and `GET {base_url}/models` via `Http`, bearer key, images header, status-to-exception mapping |
+| `JevHotdogDetector` / `FakeHotdogDetector` | Real API (one Noul + Box request) vs deterministic local answers (from `samples/expected.json` or image hash) |
 | `ImageNormaliser` | Intervention Image v3, GD default, Imagick for HEIC |
 | `HotdogUploader` | Single Livewire component: upload, validation, rate limit, result |
 | `hotdog:check` / `hotdog:eval` | Key/model/header check; golden-set accuracy over `samples/` |
