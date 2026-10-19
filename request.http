@@ -1,0 +1,14 @@
+@baseUrl = http://localhost:8000
+
+### Pages
+
+# The single page: the HotdogUploader Livewire component. Uploads and
+# results go through Livewire's own endpoints from the browser, so the
+# app has no JSON API to call directly.
+GET {{baseUrl}}/
+Accept: text/html
+
+### Health
+
+# Laravel's built-in health check, useful after the smoke test.
+GET {{baseUrl}}/up

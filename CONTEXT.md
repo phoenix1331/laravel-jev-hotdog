@@ -26,9 +26,9 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop
 
 ## Commands
 
-**composer**: dev | test | coverage (`--min=90`) | lint | lint:check | analyse
+**composer**: dev | serve | test | coverage (`--min=90`) | lint | lint:check | analyse
 
-Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel 13 skeleton default).
+Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel 13 skeleton default). `dev` and `serve` set `PHP_INI_SCAN_DIR=:$PWD/php.d` so the child PHP server loads `php.d/uploads.ini` (20M upload, 24M post); plain `php artisan serve` inherits the CLI default of 2M and phone photos fail.
 
 ## Configuration
 
@@ -47,6 +47,7 @@ Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel
 - **Preview API** - every image request sends `TypeSafe-Danger-Zone-Images: true`; images and Box need Jev 1.14 (`jev-preview` or `jev-1.14.0`; `jev-latest` is still 1.13, text only), so the model is pinned in config
 - **Show the normalised image** - the UI should display `NormalisedImage::$bytes`, not the original upload: padding for extreme aspect ratios shifts the frame, and the box fractions are relative to what Jev saw
 - **Bring your own key** - no key in the repo, tests, fixtures or recordings; fake mode is the default so the UI works straight after cloning
+- **Upload limits in three places** - PHP (`php.d/uploads.ini`, Herd users set it in Herd), Livewire temporary upload rule (`config/livewire.php`, from `HOTDOG_MAX_UPLOAD_KB`), component rule (`mimes` list, not `image`, because `image` excludes HEIC). Livewire validates the upload under `files.*` and reports PHP refusals via `validation.uploaded`, so friendly messages live in `lang/en/validation.php`. The UI shows the smaller of the app and PHP limits
 - **Nothing stored** - uploads live in Livewire temp and are deleted after the result; logs hold only verdict, confidence and latency
 - **No show branding** - no HBO name or logo; one credit line in the README
 
@@ -79,7 +80,7 @@ Domain lives in `app/Hotdog/`; bindings in `app/Providers/HotdogServiceProvider.
 | `JevHotdogDetector` | Built | One Noul (`is_hotdog`) + Box (`hotdog`) request with the image as a UUID-keyed asset; malformed box keeps the verdict and drops the box; logs `hotdog.detected` with verdict, confidence, latency, model, request id only |
 | `ImageNormaliser` | Built | Intervention Image 3.11 (brief pins v3 although v4 exists). Accepts JPEG/PNG/WebP/GIF (first frame)/HEIC (Imagick only) by sniffed MIME; refuses inputs over `max_input_megapixels` from the header before decoding; auto-orients, strips metadata, flattens alpha on white; `targetSize()` scales to 280..1568 per side, padding with white when an extreme aspect ratio makes both limits impossible; baseline JPEG q85 |
 | `ImageRejected` | Built | Friendly messages for unsupported format, HEIC without Imagick, damaged file, too many pixels |
-| `HotdogUploader` | Planned | Single Livewire component: upload, validation, rate limit, result |
+| `App\Livewire\HotdogUploader` | Built | Full-page component at `/` (layout `resources/views/components/layouts/app.blade.php`). `updatedPhoto()` runs rate limit (per IP, `hotdog.rate_limit_per_minute`), validation, normalise, detect; temp upload deleted in `finally`. `#[Locked]` `$result` holds a data URI of the normalised image plus verdict, box CSS, model, latency; `$failure` holds friendly messages; unexpected errors are `report()`ed and shown generically |
 | `hotdog:check` / `hotdog:eval` | Planned | Key/model/header check; golden-set accuracy over `hotdog.samples_path` |
 
 ## Host requirements

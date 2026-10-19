@@ -50,7 +50,11 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "@php artisan dev"
+            "PHP_INI_SCAN_DIR=\":$PWD/php.d\" php artisan dev"
+        ],
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "PHP_INI_SCAN_DIR=\":$PWD/php.d\" php artisan serve"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
@@ -106,11 +110,12 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "scripts-descriptions": {
-        "dev": "Run the app, Vite, queue and logs together",
+        "dev": "Run the app, Vite, queue and logs together, with the upload limits in php.d/",
         "test": "Run the test suite",
         "coverage": "Run tests with pcov coverage, failing below 90%",
         "lint": "Fix code style with Pint",
         "lint:check": "Check code style without changing files",
-        "analyse": "Run Larastan static analysis"
+        "analyse": "Run Larastan static analysis",
+        "serve": "Run php artisan serve with the upload limits in php.d/"
     }
 }
