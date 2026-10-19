@@ -70,9 +70,11 @@ Domain lives in `app/Hotdog/`; bindings in `app/Providers/HotdogServiceProvider.
 | `BoundingBox` | Built | Validated 0 to 1 edges; `toCssPercentages()` for the overlay, `toPixels()` for any image size |
 | `NormalisedImage` | Built | In-memory bytes, mime, normalised and original dimensions, original filename; `base64()`, `format()` for the Jev asset |
 | `HotdogResult` | Built | `decide()` maps confidence through the band and drops the box unless HOTDOG |
-| `HotdogDetector` contract | Built | `detect(NormalisedImage): HotdogResult`; resolved from `jev.fake` |
+| `HotdogDetector` contract | Built | `detect(NormalisedImage): HotdogResult`; `jev.fake` picks fake or Jev driver |
 | `FakeHotdogDetector` | Built | `samples/expected.json` match by basename (tricky entries land nearer the band but stay correct), else a SHA-1 of the bytes drives confidence, box and latency; model `fake` |
-| `JevClient` / `JevHotdogDetector` | Planned | `POST {base_url}/systemone` with one Noul + Box request via `Http`; until built, `JEV_FAKE=false` throws a `LogicException` |
+| `App\Jev\JevClient` | Built | `systemOne()` and `models()` via `Http`: bearer key, images header on every call, two retries with backoff on 429/529 only, `ConnectionException` to timeout/unreachable, failures thrown as `JevException` |
+| `App\Jev\JevError` / `JevException` | Built | Status-based error enum (400, 401/403, 413, 422, 429/529, timeout, unreachable, unexpected, missing key), each with an on-screen message that never includes the key |
+| `JevHotdogDetector` | Built | One Noul (`is_hotdog`) + Box (`hotdog`) request with the image as a UUID-keyed asset; malformed box keeps the verdict and drops the box; logs `hotdog.detected` with verdict, confidence, latency, model, request id only |
 | `ImageNormaliser` | Planned | Intervention Image v3, GD default, Imagick for HEIC |
 | `HotdogUploader` | Planned | Single Livewire component: upload, validation, rate limit, result |
 | `hotdog:check` / `hotdog:eval` | Planned | Key/model/header check; golden-set accuracy over `hotdog.samples_path` |

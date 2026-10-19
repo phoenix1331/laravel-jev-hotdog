@@ -7,10 +7,11 @@ namespace App\Providers;
 use App\Hotdog\ConfidenceBand;
 use App\Hotdog\Contracts\HotdogDetector;
 use App\Hotdog\Detectors\FakeHotdogDetector;
+use App\Hotdog\Detectors\JevHotdogDetector;
+use App\Jev\JevClient;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
-use LogicException;
 
 class HotdogServiceProvider extends ServiceProvider
 {
@@ -21,16 +22,22 @@ class HotdogServiceProvider extends ServiceProvider
             max: Config::float('hotdog.unsure_max'),
         ));
 
+        $this->app->bind(JevClient::class, fn (): JevClient => new JevClient(
+            apiKey: is_string($key = Config::get('jev.api_key')) ? $key : null,
+            baseUrl: Config::string('jev.base_url'),
+            timeoutSeconds: Config::integer('jev.timeout'),
+        ));
+
         $this->app->when(FakeHotdogDetector::class)
             ->needs('$expectedPath')
             ->give(fn (): string => Config::string('hotdog.samples_path').'/expected.json');
 
-        $this->app->bind(HotdogDetector::class, function (Application $app): HotdogDetector {
-            if (! Config::boolean('jev.fake')) {
-                throw new LogicException('Only the fake driver is available in this build. Set JEV_FAKE=true.');
-            }
+        $this->app->when(JevHotdogDetector::class)
+            ->needs('$model')
+            ->give(fn (): string => Config::string('jev.model'));
 
-            return $app->make(FakeHotdogDetector::class);
-        });
+        $this->app->bind(HotdogDetector::class, fn (Application $app): HotdogDetector => Config::boolean('jev.fake')
+            ? $app->make(FakeHotdogDetector::class)
+            : $app->make(JevHotdogDetector::class));
     }
 }
