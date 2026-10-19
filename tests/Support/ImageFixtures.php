@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Support;
 
+use finfo;
 use GdImage;
 use Imagick;
+use ImagickException;
 use ImagickPixel;
 use Intervention\Image\ImageManager;
 use RuntimeException;
@@ -99,17 +101,27 @@ final class ImageFixtures
         })->toGif();
     }
 
-    public static function heic(int $width, int $height): string
+    /**
+     * A red HEIC, or null when this machine cannot encode one. Decoding and
+     * encoding HEIC need different libheif plugins, and some ImageMagick
+     * builds return an empty blob instead of failing.
+     */
+    public static function heic(int $width, int $height): ?string
     {
         if (! class_exists(Imagick::class)) {
-            throw new RuntimeException('Imagick is needed to generate a HEIC fixture.');
+            return null;
         }
 
-        $image = new Imagick;
-        $image->newImage($width, $height, new ImagickPixel('red'));
-        $image->setImageFormat('heic');
+        try {
+            $image = new Imagick;
+            $image->newImage($width, $height, new ImagickPixel('red'));
+            $image->setImageFormat('heic');
+            $bytes = $image->getImageBlob();
+        } catch (ImagickException) {
+            return null;
+        }
 
-        return $image->getImageBlob();
+        return (new finfo(FILEINFO_MIME_TYPE))->buffer($bytes) === 'image/heic' ? $bytes : null;
     }
 
     /**

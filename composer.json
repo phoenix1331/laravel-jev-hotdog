@@ -73,6 +73,12 @@
         "analyse": [
             "phpstan analyse --memory-limit=1G"
         ],
+        "record": [
+            "Composer\\Config::disableProcessTimeout",
+            "vhs art/tapes/setup.tape",
+            "vhs art/tapes/hotdog-check.tape",
+            "vhs art/tapes/hotdog-eval.tape"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
@@ -116,6 +122,7 @@
         "lint": "Fix code style with Pint",
         "lint:check": "Check code style without changing files",
         "analyse": "Run Larastan static analysis",
-        "serve": "Run php artisan serve with the upload limits in php.d/"
+        "serve": "Run php artisan serve with the upload limits in php.d/",
+        "record": "Record the terminal GIFs in art/ with VHS (fake mode, no key)"
     }
 }

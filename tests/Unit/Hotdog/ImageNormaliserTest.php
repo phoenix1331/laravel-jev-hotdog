@@ -136,7 +136,9 @@ describe('normalise', function () {
             $this->markTestSkipped('This Imagick build cannot decode HEIC.');
         }
 
-        $image = $normaliser->normalise(F::heic(400, 300), 'IMG_0001.HEIC');
+        $heic = F::heic(400, 300) ?? $this->markTestSkipped('This machine cannot encode a HEIC fixture.');
+
+        $image = $normaliser->normalise($heic, 'IMG_0001.HEIC');
 
         expect(getimagesizefromstring($image->bytes)['mime'])->toBe('image/jpeg')
             ->and(dimensionsOf($image->bytes))->toBe([400, 300])
@@ -144,13 +146,11 @@ describe('normalise', function () {
     });
 
     it('explains that heic needs imagick on gd', function () {
-        if (! extension_loaded('imagick')) {
-            $this->markTestSkipped('Imagick is needed to generate the HEIC fixture.');
-        }
+        $heic = F::heic(400, 300) ?? $this->markTestSkipped('This machine cannot encode a HEIC fixture.');
 
         expect(normaliser('gd')->supportsHeic())->toBeFalse();
 
-        normaliser('gd')->normalise(F::heic(400, 300));
+        normaliser('gd')->normalise($heic);
     })->throws(ImageRejected::class, 'HEIC photos need the PHP Imagick extension');
 });
 
