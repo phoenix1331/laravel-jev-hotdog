@@ -11,6 +11,7 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop
 | Storage | None. Session `file`, cache `file`, queue `sync`, failed jobs `null` |
 | Frontend | Livewire 3 (`WithFileUploads`), Tailwind, Vite |
 | Quality | Pest, Larastan, Pint (`declare_strict_types`), Husky hooks, pcov for coverage (90% min on `app/`) |
+| Git hooks | Husky 9 (`.husky/`, tracked): `commit-msg` enforces lowercase conventional commits, `pre-commit` runs Pint and `osv-scanner` on `composer.lock`; installed by `npm install` via `prepare` |
 | CI | GitHub Actions, fake driver only, no secrets |
 
 ## Deviations from the default 1331 stack
