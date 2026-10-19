@@ -9,6 +9,7 @@ use App\Hotdog\Contracts\HotdogDetector;
 use App\Hotdog\Detectors\FakeHotdogDetector;
 use App\Hotdog\Detectors\JevHotdogDetector;
 use App\Hotdog\ImageNormaliser;
+use App\Hotdog\Samples\SampleCatalogue;
 use App\Jev\JevClient;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Config;
@@ -31,14 +32,16 @@ class HotdogServiceProvider extends ServiceProvider
             timeoutSeconds: Config::integer('jev.timeout'),
         ));
 
-        $this->app->bind(ImageNormaliser::class, fn (): ImageNormaliser => new ImageNormaliser(
-            manager: self::imageManager(Config::string('hotdog.image_driver')),
+        $this->app->singleton(ImageManager::class, fn (): ImageManager => self::imageManager(Config::string('hotdog.image_driver')));
+
+        $this->app->bind(ImageNormaliser::class, fn (Application $app): ImageNormaliser => new ImageNormaliser(
+            manager: $app->make(ImageManager::class),
             maxInputMegapixels: Config::integer('hotdog.max_input_megapixels'),
         ));
 
-        $this->app->when(FakeHotdogDetector::class)
-            ->needs('$expectedPath')
-            ->give(fn (): string => Config::string('hotdog.samples_path').'/expected.json');
+        $this->app->singleton(SampleCatalogue::class, fn (): SampleCatalogue => new SampleCatalogue(
+            Config::string('hotdog.samples_path'),
+        ));
 
         $this->app->when(JevHotdogDetector::class)
             ->needs('$model')

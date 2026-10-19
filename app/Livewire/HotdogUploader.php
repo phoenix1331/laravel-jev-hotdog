@@ -9,6 +9,7 @@ use App\Hotdog\HotdogResult;
 use App\Hotdog\ImageNormaliser;
 use App\Hotdog\ImageRejected;
 use App\Hotdog\NormalisedImage;
+use App\Hotdog\Samples\SampleCatalogue;
 use App\Jev\JevException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Config;
@@ -56,6 +57,31 @@ final class HotdogUploader extends Component
         }
     }
 
+    /**
+     * Run a bundled sample through the same pipeline as an upload. Only
+     * files listed in expected.json and present on disk can be chosen.
+     */
+    public function trySample(string $file): void
+    {
+        $this->discardUpload();
+        $this->reset('result', 'failure');
+        $this->resetValidation();
+
+        $sample = app(SampleCatalogue::class)->find($file);
+
+        if ($sample === null || ! $sample->exists()) {
+            $this->failure = 'That sample is not available.';
+
+            return;
+        }
+
+        if (! $this->withinRateLimit()) {
+            return;
+        }
+
+        $this->detect((string) file_get_contents($sample->path), $sample->file);
+    }
+
     public function startOver(): void
     {
         $this->discardUpload();
@@ -69,6 +95,7 @@ final class HotdogUploader extends Component
             'fakeMode' => Config::boolean('jev.fake'),
             'maxUploadMb' => $this->maxUploadMb(),
             'accept' => 'image/*,.heic,.heif',
+            'samples' => app(SampleCatalogue::class)->available(),
         ]);
     }
 
@@ -90,11 +117,19 @@ final class HotdogUploader extends Component
 
         $this->validate();
 
-        try {
-            /** @var TemporaryUploadedFile $photo */
-            $photo = $this->photo;
+        /** @var TemporaryUploadedFile $photo */
+        $photo = $this->photo;
 
-            $image = app(ImageNormaliser::class)->normalise((string) $photo->get(), $photo->getClientOriginalName());
+        $this->detect((string) $photo->get(), $photo->getClientOriginalName());
+    }
+
+    /**
+     * Normalise and detect, turning every failure into a message on screen.
+     */
+    private function detect(string $bytes, string $name): void
+    {
+        try {
+            $image = app(ImageNormaliser::class)->normalise($bytes, $name);
 
             $this->result = self::present(app(HotdogDetector::class)->detect($image), $image);
         } catch (ImageRejected|JevException $e) {

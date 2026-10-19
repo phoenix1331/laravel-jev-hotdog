@@ -25,7 +25,7 @@
                 x-on:dragleave="over = false"
                 x-on:drop="over = false"
                 wire:loading.class="pointer-events-none"
-                wire:target="photo"
+                wire:target="photo, trySample"
                 class="drop-zone relative flex min-h-80 outline-offset-4 has-[input:focus-visible]:outline-4 has-[input:focus-visible]:outline-ink flex-col justify-center rounded-sm px-6 py-12 transition-colors sm:min-h-96 sm:px-10"
                 :class="over ? 'bg-mustard/15' : 'bg-transparent'"
             >
@@ -38,7 +38,7 @@
                     aria-describedby="photo-hint"
                 >
 
-                <div wire:loading.remove wire:target="photo">
+                <div wire:loading.remove wire:target="photo, trySample">
                     <label for="photo" class="block font-display text-5xl leading-[0.95] font-black tracking-tight sm:text-7xl">
                         Drop a photo. Is it a hot dog?
                     </label>
@@ -46,7 +46,7 @@
                     <p id="photo-hint" class="mt-8 text-sm text-ink-soft">JPEG, PNG, WebP, GIF or HEIC, up to {{ $maxUploadMb }} MB.</p>
                 </div>
 
-                <div wire:loading.flex wire:target="photo" class="hidden flex-col gap-6" role="status">
+                <div wire:loading.flex wire:target="photo, trySample" class="hidden flex-col gap-6" role="status">
                     <p class="font-display text-5xl leading-none font-black tracking-tight sm:text-7xl">Looking for a hot dog</p>
                     <div class="h-2 w-full overflow-hidden rounded-full bg-mustard/20">
                         <div class="checking-bar h-full w-2/5 rounded-full bg-mustard"></div>
@@ -60,6 +60,36 @@
 
             @if ($failure !== null)
                 <p role="alert" data-test="error" class="mt-6 border-l-4 border-ketchup pl-4 text-base text-ink">{{ $failure }}</p>
+            @endif
+
+            @if ($samples !== [])
+                <div class="mt-10">
+                    <h2 class="font-display text-2xl font-extrabold tracking-tight">No photo handy? Try one of these</h2>
+                    <p class="mt-1 text-sm text-ink-soft">Some are easy. Some are corn dogs.</p>
+
+                    <ul class="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+                        @foreach ($samples as $sample)
+                            <li wire:key="sample-{{ $sample->file }}">
+                                <button
+                                    type="button"
+                                    wire:click="trySample('{{ $sample->file }}')"
+                                    wire:loading.attr="disabled"
+                                    wire:target="photo, trySample"
+                                    data-test="sample"
+                                    class="group block w-full text-left focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                                >
+                                    <img
+                                        src="{{ route('samples.thumbnail', $sample->file) }}"
+                                        alt=""
+                                        loading="lazy"
+                                        class="aspect-square w-full rounded-sm bg-rule object-cover transition group-hover:opacity-80"
+                                    >
+                                    <span class="mt-1 block truncate text-sm text-ink-soft group-hover:text-ink">{{ $sample->label() }}</span>
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
         </section>
     @else

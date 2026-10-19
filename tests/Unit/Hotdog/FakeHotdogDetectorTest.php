@@ -5,7 +5,9 @@ declare(strict_types=1);
 use App\Hotdog\ConfidenceBand;
 use App\Hotdog\Detectors\FakeHotdogDetector;
 use App\Hotdog\NormalisedImage;
+use App\Hotdog\Samples\SampleCatalogue;
 use App\Hotdog\Verdict;
+use Tests\Support\TemporarySamples;
 
 function fakeImage(string $bytes, ?string $name = null): NormalisedImage
 {
@@ -14,14 +16,10 @@ function fakeImage(string $bytes, ?string $name = null): NormalisedImage
 
 function fakeDetector(?string $expectedJson = null): FakeHotdogDetector
 {
-    $path = sys_get_temp_dir().'/hotdog-expected-'.bin2hex(random_bytes(6)).'.json';
-
-    if ($expectedJson !== null) {
-        file_put_contents($path, $expectedJson);
-        register_shutdown_function(fn () => @unlink($path));
-    }
-
-    return new FakeHotdogDetector(new ConfidenceBand(0.4, 0.6), $path);
+    return new FakeHotdogDetector(
+        new ConfidenceBand(0.4, 0.6),
+        new SampleCatalogue(TemporarySamples::make($expectedJson)),
+    );
 }
 
 $expected = json_encode([

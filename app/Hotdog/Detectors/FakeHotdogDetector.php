@@ -9,6 +9,7 @@ use App\Hotdog\ConfidenceBand;
 use App\Hotdog\Contracts\HotdogDetector;
 use App\Hotdog\HotdogResult;
 use App\Hotdog\NormalisedImage;
+use App\Hotdog\Samples\SampleCatalogue;
 use App\Hotdog\Verdict;
 
 /**
@@ -21,22 +22,19 @@ final class FakeHotdogDetector implements HotdogDetector
 {
     public const MODEL = 'fake';
 
-    /** @var array<string, array{expected: Verdict, tricky: bool}>|null */
-    private ?array $expectations = null;
-
     public function __construct(
         private readonly ConfidenceBand $band,
-        private readonly string $expectedPath,
+        private readonly SampleCatalogue $samples,
     ) {}
 
     public function detect(NormalisedImage $image): HotdogResult
     {
         $seed = self::seed($image->bytes);
-        $known = $this->expectations()[basename((string) $image->originalName)] ?? null;
+        $known = $image->originalName === null ? null : $this->samples->find($image->originalName);
 
         $confidence = $known === null
             ? $seed[0]
-            : self::confidenceFor($known['expected'], $known['tricky'], $seed[0]);
+            : self::confidenceFor($known->expected, $known->tricky, $seed[0]);
 
         return HotdogResult::decide(
             band: $this->band,
@@ -90,38 +88,5 @@ final class FakeHotdogDetector implements HotdogDetector
             static fn (string $chunk): float => hexdec($chunk) / 0xFFFFFFFF,
             str_split(sha1($bytes), 8),
         );
-    }
-
-    /**
-     * @return array<string, array{expected: Verdict, tricky: bool}>
-     */
-    private function expectations(): array
-    {
-        if ($this->expectations !== null) {
-            return $this->expectations;
-        }
-
-        $decoded = is_file($this->expectedPath)
-            ? json_decode((string) file_get_contents($this->expectedPath), true)
-            : null;
-
-        $this->expectations = [];
-
-        foreach (is_array($decoded) ? $decoded : [] as $entry) {
-            $expected = is_array($entry) && is_string($entry['expected'] ?? null)
-                ? Verdict::tryFrom($entry['expected'])
-                : null;
-
-            if ($expected === null || ! is_string($entry['file'] ?? null)) {
-                continue;
-            }
-
-            $this->expectations[$entry['file']] = [
-                'expected' => $expected,
-                'tricky' => ($entry['tricky'] ?? false) === true,
-            ];
-        }
-
-        return $this->expectations;
     }
 }

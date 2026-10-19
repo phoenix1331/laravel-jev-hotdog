@@ -1,0 +1,21 @@
+[
+    { "file": "classic.jpg", "expected": "hotdog" },
+    { "file": "chilli-dog.jpg", "expected": "hotdog" },
+    { "file": "with-fries.jpg", "expected": "hotdog" },
+    { "file": "hand-held.jpg", "expected": "hotdog" },
+    { "file": "side-on.jpg", "expected": "hotdog", "tricky": true },
+    { "file": "tray.jpg", "expected": "hotdog", "tricky": true },
+    { "file": "half-eaten.jpg", "expected": "hotdog", "tricky": true },
+    { "file": "bratwurst.jpg", "expected": "not_hotdog", "tricky": true },
+    { "file": "sausage-roll.jpg", "expected": "not_hotdog", "tricky": true },
+    { "file": "corn-dog.jpg", "expected": "not_hotdog", "tricky": true },
+    { "file": "dachshund.jpg", "expected": "not_hotdog", "tricky": true },
+    { "file": "dog-costume.jpg", "expected": "not_hotdog", "tricky": true },
+    { "file": "empty-bun.jpg", "expected": "not_hotdog", "tricky": true },
+    { "file": "banana-bun.jpg", "expected": "not_hotdog", "tricky": true },
+    { "file": "edge-huge.jpg", "expected": "not_hotdog" },
+    { "file": "edge-tiny.png", "expected": "not_hotdog" },
+    { "file": "edge-webp.webp", "expected": "not_hotdog" },
+    { "file": "edge-animated.gif", "expected": "not_hotdog" },
+    { "file": "edge-phone.heic", "expected": "hotdog" }
+]

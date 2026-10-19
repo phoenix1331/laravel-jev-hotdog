@@ -12,3 +12,13 @@ Accept: text/html
 
 # Laravel's built-in health check, useful after the smoke test.
 GET {{baseUrl}}/up
+
+### Samples
+
+# A 480px JPEG preview of a bundled sample, generated once and cached.
+# Only files listed in samples/expected.json and present on disk work.
+GET {{baseUrl}}/samples/classic.jpg/thumbnail
+Accept: image/jpeg
+
+# Anything else is a 404, including names not in expected.json.
+GET {{baseUrl}}/samples/expected.json/thumbnail

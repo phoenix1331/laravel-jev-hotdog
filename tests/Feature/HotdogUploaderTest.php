@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 use Tests\Support\ImageFixtures;
+use Tests\Support\TemporarySamples;
 
 final class StubDetector implements HotdogDetector
 {
@@ -267,4 +268,85 @@ it('is called hotdog not hotdog', function () {
     $this->get('/')
         ->assertSee('<title>Hotdog Not Hotdog</title>', escape: false)
         ->assertSeeInOrder(['Hotdog Not Hotdog', 'Drop a photo. Is it a hot dog?']);
+});
+
+describe('samples', function () {
+    beforeEach(function () {
+        config(['hotdog.samples_path' => TemporarySamples::make(json_encode([
+            ['file' => 'classic.jpg', 'expected' => 'hotdog'],
+            ['file' => 'corn-dog.jpg', 'expected' => 'not_hotdog', 'tricky' => true],
+            ['file' => 'wanted.jpg', 'expected' => 'hotdog'],
+        ]), [
+            'classic.jpg' => ImageFixtures::jpeg(800, 600),
+            'corn-dog.jpg' => ImageFixtures::jpeg(600, 800),
+        ])]);
+    });
+
+    it('shows a thumbnail button for each available sample', function () {
+        Livewire::test(HotdogUploader::class)
+            ->assertSee('No photo handy? Try one of these')
+            ->assertSeeHtml("wire:click=\"trySample('classic.jpg')\"")
+            ->assertSeeHtml('src="'.route('samples.thumbnail', 'corn-dog.jpg').'"')
+            ->assertSee('Corn dog')
+            ->assertDontSeeHtml('wanted.jpg');
+    });
+
+    it('hides the sample row when there are none', function () {
+        config(['hotdog.samples_path' => TemporarySamples::make()]);
+
+        Livewire::test(HotdogUploader::class)->assertDontSee('No photo handy?');
+    });
+
+    it('checks a sample with the fake driver using its expected answer', function (string $file, string $verdict) {
+        Livewire::test(HotdogUploader::class)
+            ->call('trySample', $file)
+            ->assertSet('failure', null)
+            ->assertSet('result.verdict', $verdict)
+            ->assertSee('fake');
+    })->with([
+        'easy yes' => ['classic.jpg', 'hotdog'],
+        'tricky no' => ['corn-dog.jpg', 'not_hotdog'],
+    ]);
+
+    it('sends the sample filename and normalised bytes to the detector', function () {
+        $detector = stubDetector(0.9);
+
+        Livewire::test(HotdogUploader::class)->call('trySample', 'corn-dog.jpg');
+
+        expect($detector->seen)->toHaveCount(1)
+            ->and($detector->seen[0]->originalName)->toBe('corn-dog.jpg')
+            ->and([$detector->seen[0]->width, $detector->seen[0]->height])->toBe([600, 800]);
+    });
+
+    it('refuses samples that are not listed or not present', function (string $file) {
+        $detector = stubDetector(0.9);
+
+        Livewire::test(HotdogUploader::class)
+            ->call('trySample', $file)
+            ->assertSet('failure', 'That sample is not available.')
+            ->assertSet('result', null);
+
+        expect($detector->seen)->toBeEmpty();
+    })->with(['missing photo' => ['wanted.jpg'], 'unlisted' => ['secret.jpg'], 'traversal' => ['../../.env']]);
+
+    it('counts samples towards the rate limit', function () {
+        config(['hotdog.rate_limit_per_minute' => 1]);
+        $detector = stubDetector(0.9);
+
+        Livewire::test(HotdogUploader::class)
+            ->call('trySample', 'classic.jpg')
+            ->call('trySample', 'classic.jpg')
+            ->assertSee('That is a lot of photos.');
+
+        expect($detector->seen)->toHaveCount(1);
+    });
+
+    it('clears a previous result and validation errors before trying a sample', function () {
+        Livewire::test(HotdogUploader::class)
+            ->set('photo', UploadedFile::fake()->create('menu.pdf', 10, 'application/pdf'))
+            ->assertHasErrors('photo')
+            ->call('trySample', 'classic.jpg')
+            ->assertHasNoErrors()
+            ->assertSet('result.verdict', 'hotdog');
+    });
 });
