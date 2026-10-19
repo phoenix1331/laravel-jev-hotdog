@@ -8,9 +8,9 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop
 |------|--------|
 | Framework | Laravel 13, PHP 8.3+ (developed on 8.4) |
 | Runtime | Native WSL, `php artisan dev` locally; `php artisan serve` or Herd for users |
-| Storage | None. Session `file`, cache `file`, queue `sync`, failed jobs `null` |
-| Frontend | Livewire 3 (`WithFileUploads`), Tailwind, Vite |
-| Quality | Pest, Larastan, Pint (`pint.json`: `laravel` preset + `declare_strict_types`, applied to every PHP file), Husky hooks, pcov for coverage (90% min on `app/`) |
+| Storage | None. Session `file`, cache `file`, queue `sync`, failed jobs `null`; only the `local` disk (Livewire temp) and `s3` remain in `config/filesystems.php` |
+| Frontend | Livewire 3.8 (`WithFileUploads`; brief pins v3 although v4 exists), Tailwind 4 via `@tailwindcss/vite`, Vite 8 |
+| Quality | Pest 4 (+ Laravel, Livewire plugins), Larastan level 8 on `app/`, `config/`, `routes/` (`phpstan.neon`), arch tests in `tests/Unit/ArchTest.php` (no debug helpers, no `env()` outside config, strict types), Pint (`pint.json`: `laravel` preset + `declare_strict_types`, applied to every PHP file), Husky hooks, pcov for coverage (90% min on `app/`) |
 | Git hooks | Husky 9 (`.husky/`, tracked): `commit-msg` enforces lowercase conventional commits, `pre-commit` runs Pint and `osv-scanner` on `composer.lock`; installed by `npm install` via `prepare` |
 | CI | GitHub Actions, fake driver only, no secrets |
 
@@ -19,13 +19,13 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop
 | Default | Here | Why |
 |---------|------|-----|
 | Docker + FrankenPHP | Native PHP | Clone-and-run in minutes with `composer install`; no containers to learn |
-| MySQL | No database | Nothing is stored; `database/`, `User` model and `config/auth.php` removed |
+| MySQL | No database | Nothing is stored; `database/`, `User` model, `config/auth.php` and the `public` disk removed |
 | Makefile | Composer scripts (`composer.json` `scripts`) | Brief forbids a Makefile; `composer` is already required |
 | pcov in Dockerfile | pcov on host (`php8.4-pcov`) and in CI | No Dockerfile |
 
 ## Commands
 
-**composer**: dev | test | coverage (`--min=90`) | lint | lint:check
+**composer**: dev | test | coverage (`--min=90`) | lint | lint:check | analyse
 
 Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel 13 skeleton default).
 
