@@ -140,7 +140,7 @@
                                 style="top: {{ $result['box']['top'] }}; left: {{ $result['box']['left'] }}; width: {{ $result['box']['width'] }}; height: {{ $result['box']['height'] }};"
                             >
                                 <span class="absolute -top-8 -left-1 rounded-sm bg-relish px-2 py-0.5 text-sm font-semibold whitespace-nowrap text-white">
-                                    Hot dog{{ $result['boxConfidence'] !== null ? ' '.number_format($result['boxConfidence'] * 100).'%' : '' }}
+                                    Hot dog
                                 </span>
                             </div>
                         @endif

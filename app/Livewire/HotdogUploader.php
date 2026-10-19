@@ -41,7 +41,7 @@ final class HotdogUploader extends Component
     public $photo = null;
 
     /**
-     * @var array{verdict: string, label: string, confidence: float, box: array{top: string, left: string, width: string, height: string}|null, boxConfidence: float|null, latencyMs: int, model: string, image: string, width: int, height: int}|null
+     * @var array{verdict: string, label: string, confidence: float, box: array{top: string, left: string, width: string, height: string}|null, latencyMs: int, model: string, image: string, width: int, height: int}|null
      */
     #[Locked]
     public ?array $result = null;
@@ -181,7 +181,7 @@ final class HotdogUploader extends Component
      * The preview is the normalised image Jev saw, so the box fractions line
      * up even when the normaliser padded an extreme aspect ratio.
      *
-     * @return array{verdict: string, label: string, confidence: float, box: array{top: string, left: string, width: string, height: string}|null, boxConfidence: float|null, latencyMs: int, model: string, image: string, width: int, height: int}
+     * @return array{verdict: string, label: string, confidence: float, box: array{top: string, left: string, width: string, height: string}|null, latencyMs: int, model: string, image: string, width: int, height: int}
      */
     private static function present(HotdogResult $result, NormalisedImage $image): array
     {
@@ -190,7 +190,6 @@ final class HotdogUploader extends Component
             'label' => $result->verdict->label(),
             'confidence' => $result->confidence,
             'box' => $result->box?->toCssPercentages(),
-            'boxConfidence' => $result->box?->confidence,
             'latencyMs' => $result->latencyMs,
             'model' => $result->model,
             'image' => 'data:'.$image->mime.';base64,'.$image->base64(),

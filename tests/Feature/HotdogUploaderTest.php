@@ -371,3 +371,14 @@ it('scrolls up as soon as a sample is clicked, respecting reduced motion', funct
         ->assertSeeHtml('x-on:click="top()"')
         ->assertSeeHtml('prefers-reduced-motion: reduce');
 });
+
+it('shows one percentage: the hot dog confidence, never the box confidence', function () {
+    stubDetector(0.97);
+
+    Livewire::test(HotdogUploader::class)
+        ->set('photo', photo())
+        ->assertSeeHtml('data-test="box"')
+        ->assertSee('97.0%')
+        ->assertDontSee('90%')
+        ->assertDontSee('Box placement');
+});
