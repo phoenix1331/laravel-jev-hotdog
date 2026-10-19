@@ -182,8 +182,6 @@ More detail on decisions and the layout of the code is in [`CONTEXT.md`](CONTEXT
 
 ## Contributing
 
-Developed on Ubuntu under WSL. Before opening a pull request:
-
 ```bash
 composer lint
 composer analyse
