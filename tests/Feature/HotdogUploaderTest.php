@@ -262,3 +262,9 @@ it('holds the upload on the temporary disk only while checking it', function () 
 
     expect($during)->toHaveCount(1)->and(temporaryUploads())->toBeEmpty();
 });
+
+it('is called hotdog not hotdog', function () {
+    $this->get('/')
+        ->assertSee('<title>Hotdog Not Hotdog</title>', escape: false)
+        ->assertSeeInOrder(['Hotdog Not Hotdog', 'Drop a photo. Is it a hot dog?']);
+});

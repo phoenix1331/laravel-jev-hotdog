@@ -1,6 +1,6 @@
 # Context
 
-Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop a photo, get HOTDOG / NOT HOTDOG / NOT SURE, with a box drawn around the hot dog. Showcases Jev (TypeSafe) image input with Noul and Box question types. Learning repo, not a package: no Packagist, tags, releases or CHANGELOG; `main` is current.
+Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`), titled **Hotdog Not Hotdog** (`APP_NAME`, used for the page title and header): drop a photo, get HOTDOG / NOT HOTDOG / NOT SURE, with a box drawn around the hot dog. Showcases Jev (TypeSafe) image input with Noul and Box question types. Learning repo, not a package: no Packagist, tags, releases or CHANGELOG; `main` is current.
 
 ## Stack
 
@@ -49,7 +49,8 @@ Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel
 - **Bring your own key** - no key in the repo, tests, fixtures or recordings; fake mode is the default so the UI works straight after cloning
 - **Upload limits in three places** - PHP (`php.d/uploads.ini`, Herd users set it in Herd), Livewire temporary upload rule (`config/livewire.php`, from `HOTDOG_MAX_UPLOAD_KB`), component rule (`mimes` list, not `image`, because `image` excludes HEIC). Livewire validates the upload under `files.*` and reports PHP refusals via `validation.uploaded`, so friendly messages live in `lang/en/validation.php`. The UI shows the smaller of the app and PHP limits
 - **Nothing stored** - uploads live in Livewire temp and are deleted after the result; logs hold only verdict, confidence and latency
-- **No show branding** - no HBO name or logo; one credit line in the README
+- **No show branding** - no HBO name, logo, fonts or screenshots; one credit line in the README. The title Hotdog Not Hotdog was chosen by the owner
+- **Design** - tokens in `resources/css/app.css` `@theme`: ink `#14213d`, relish `#1e7f45` (HOTDOG), ketchup `#c8102e` (NOT HOTDOG), mustard `#f2a900` (NOT SURE, drop zone border). Big Shoulders Display (a Chicago civic typeface, for the Chicago dog) for display, Instrument Sans for body, both from Bunny Fonts. Full-bleed verdict banner sized `clamp(3.5rem, 19vw, 13rem)` so NOT HOTDOG fits at 320px; one stamp animation, off under reduced motion. Every clickable element gets `cursor: pointer` via a base rule (Tailwind 4 preflight resets buttons to the default cursor)
 
 ## Jev client
 
