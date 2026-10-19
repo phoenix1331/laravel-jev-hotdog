@@ -350,3 +350,24 @@ describe('samples', function () {
             ->assertSet('result.verdict', 'hotdog');
     });
 });
+
+it('tells the browser to scroll to the verdict after every check', function (string $action) {
+    stubDetector(0.9);
+    $component = Livewire::test(HotdogUploader::class);
+
+    match ($action) {
+        'upload' => $component->set('photo', photo()),
+        'invalid upload' => $component->set('photo', UploadedFile::fake()->create('menu.pdf', 10, 'application/pdf')),
+        'sample' => $component->call('trySample', 'classic.jpg'),
+        'unavailable sample' => $component->call('trySample', 'nope.jpg'),
+    };
+
+    $component->assertDispatched(HotdogUploader::CHECKED_EVENT);
+})->with(['upload', 'invalid upload', 'sample', 'unavailable sample']);
+
+it('scrolls up as soon as a sample is clicked, respecting reduced motion', function () {
+    Livewire::test(HotdogUploader::class)
+        ->assertSeeHtml('x-on:hotdog-checked.window="top()"')
+        ->assertSeeHtml('x-on:click="top()"')
+        ->assertSeeHtml('prefers-reduced-motion: reduce');
+});

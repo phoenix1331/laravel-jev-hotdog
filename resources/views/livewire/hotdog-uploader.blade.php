@@ -6,7 +6,11 @@
     ];
 @endphp
 
-<main class="pb-16">
+<main
+    class="pb-16"
+    x-data="{ top() { window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }) } }"
+    x-on:hotdog-checked.window="top()"
+>
     <header class="mx-auto flex max-w-2xl items-baseline justify-between gap-4 px-4 pt-6 sm:px-6 sm:pt-10">
         <p class="font-display text-2xl font-extrabold tracking-tight">{{ config('app.name') }}</p>
 
@@ -73,6 +77,7 @@
                                 <button
                                     type="button"
                                     wire:click="trySample('{{ $sample->file }}')"
+                                    x-on:click="top()"
                                     wire:loading.attr="disabled"
                                     wire:target="photo, trySample"
                                     data-test="sample"

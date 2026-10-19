@@ -32,6 +32,9 @@ final class HotdogUploader extends Component
     /** HEIC is not in Laravel's `image` rule, so the accepted list is explicit. */
     public const ACCEPTED_EXTENSIONS = 'jpg,jpeg,png,webp,gif,heic,heif';
 
+    /** Browser event after every check, so the page can scroll to the verdict. */
+    public const CHECKED_EVENT = 'hotdog-checked';
+
     public const GENERIC_FAILURE = 'Something went wrong checking that photo. Try again.';
 
     /** @var TemporaryUploadedFile|null */
@@ -54,6 +57,7 @@ final class HotdogUploader extends Component
             $this->check();
         } finally {
             $this->discardUpload();
+            $this->dispatch(self::CHECKED_EVENT);
         }
     }
 
@@ -67,19 +71,11 @@ final class HotdogUploader extends Component
         $this->reset('result', 'failure');
         $this->resetValidation();
 
-        $sample = app(SampleCatalogue::class)->find($file);
-
-        if ($sample === null || ! $sample->exists()) {
-            $this->failure = 'That sample is not available.';
-
-            return;
+        try {
+            $this->checkSample($file);
+        } finally {
+            $this->dispatch(self::CHECKED_EVENT);
         }
-
-        if (! $this->withinRateLimit()) {
-            return;
-        }
-
-        $this->detect((string) file_get_contents($sample->path), $sample->file);
     }
 
     public function startOver(): void
@@ -138,6 +134,23 @@ final class HotdogUploader extends Component
             report($e);
             $this->failure = self::GENERIC_FAILURE;
         }
+    }
+
+    private function checkSample(string $file): void
+    {
+        $sample = app(SampleCatalogue::class)->find($file);
+
+        if ($sample === null || ! $sample->exists()) {
+            $this->failure = 'That sample is not available.';
+
+            return;
+        }
+
+        if (! $this->withinRateLimit()) {
+            return;
+        }
+
+        $this->detect((string) file_get_contents($sample->path), $sample->file);
     }
 
     private function withinRateLimit(): bool
