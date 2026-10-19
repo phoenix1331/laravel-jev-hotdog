@@ -4,9 +4,10 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    /* Self-hosted by the Vite fonts plugin (@fonts); its variables include metric-matched fallbacks. */
+    --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'Big Shoulders Display', 'Arial Narrow', ui-sans-serif, sans-serif;
+    --font-display: var(--font-big-shoulders-display), 'Arial Narrow', ui-sans-serif, sans-serif;
 
     /* Ink and paper */
     --color-ink: #14213d;

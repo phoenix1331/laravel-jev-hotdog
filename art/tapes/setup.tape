@@ -5,7 +5,7 @@
 Output art/setup.gif
 
 Source art/tapes/settings.tape
-Set Height 820
+Set Height 560
 
 Hide
 Type "export DEMO=$(mktemp -d) PS1='$ ' && unset JEV_FAKE JEV_API_KEY"
