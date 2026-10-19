@@ -6,13 +6,13 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop
 
 | Area | Choice |
 |------|--------|
-| Framework | Laravel 13, PHP 8.3+ (developed on 8.4) |
+| Framework | Laravel 13, PHP 8.3+ (developed on 8.4); `composer.json` pins `config.platform.php` to 8.3.0 so the lock resolves Symfony 7.4 LTS rather than Symfony 8 (PHP 8.4+ only) |
 | Runtime | Native WSL, `php artisan dev` locally; `php artisan serve` or Herd for users |
 | Storage | None. Session `file`, cache `file`, queue `sync`, failed jobs `null`; only the `local` disk (Livewire temp) and `s3` remain in `config/filesystems.php` |
 | Frontend | Livewire 3.8 (`WithFileUploads`; brief pins v3 although v4 exists), Tailwind 4 via `@tailwindcss/vite`, Vite 8 |
 | Quality | Pest 4 (+ Laravel, Livewire plugins), Larastan level 8 on `app/`, `config/`, `routes/` (`phpstan.neon`), arch tests in `tests/Unit/ArchTest.php` (no debug helpers, no `env()` outside config, strict types), Pint (`pint.json`: `laravel` preset + `declare_strict_types`, applied to every PHP file), Husky hooks, pcov for coverage (90% min on `app/`) |
 | Git hooks | Husky 9 (`.husky/`, tracked): `commit-msg` enforces lowercase conventional commits, `pre-commit` runs Pint and `osv-scanner` on `composer.lock`; installed by `npm install` via `prepare` |
-| CI | GitHub Actions, fake driver only, no secrets |
+| CI | `.github/workflows/ci.yml`: `quality` (Pint, Larastan), `tests` (PHP 8.3 and 8.4 matrix), `coverage` (pcov, `--min=90`, `shell: bash` so `tee` keeps pipefail); `JEV_FAKE=true`, no secrets |
 
 ## Deviations from the default 1331 stack
 
