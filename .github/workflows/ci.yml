@@ -72,6 +72,11 @@ jobs:
 
       - run: php artisan test
 
+      # Fake mode scores 100% by design: this proves every committed sample
+      # loads, normalises and runs end to end, not how good the model is.
+      - name: eval pipeline
+        run: php artisan hotdog:eval --min=100
+
   coverage:
     name: coverage
     runs-on: ubuntu-latest

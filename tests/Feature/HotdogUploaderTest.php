@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Hotdog\BoundingBox;
 use App\Hotdog\ConfidenceBand;
-use App\Hotdog\Contracts\HotdogDetector;
 use App\Hotdog\HotdogResult;
-use App\Hotdog\NormalisedImage;
 use App\Jev\JevError;
 use App\Jev\JevException;
 use App\Livewire\HotdogUploader;
@@ -16,39 +13,12 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 use Tests\Support\ImageFixtures;
+use Tests\Support\StubDetector;
 use Tests\Support\TemporarySamples;
-
-final class StubDetector implements HotdogDetector
-{
-    /** @var list<NormalisedImage> */
-    public array $seen = [];
-
-    public function __construct(private readonly Closure|float $answer) {}
-
-    public function detect(NormalisedImage $image): HotdogResult
-    {
-        $this->seen[] = $image;
-
-        if ($this->answer instanceof Closure) {
-            return ($this->answer)($image);
-        }
-
-        return HotdogResult::decide(
-            new ConfidenceBand(0.4, 0.6),
-            $this->answer,
-            new BoundingBox(top: 0.2, bottom: 0.66, left: 0.19, right: 0.68, confidence: 0.9),
-            321,
-            'jev-1.14.0',
-        );
-    }
-}
 
 function stubDetector(Closure|float $answer): StubDetector
 {
-    $detector = new StubDetector($answer);
-    app()->instance(HotdogDetector::class, $detector);
-
-    return $detector;
+    return StubDetector::bind($answer);
 }
 
 function photo(string $name = 'lunch.jpg', ?string $bytes = null): UploadedFile

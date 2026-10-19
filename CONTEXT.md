@@ -13,7 +13,7 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`), titl
 | Frontend | Livewire 3.8 (`WithFileUploads`; brief pins v3 although v4 exists), Tailwind 4 via `@tailwindcss/vite`, Vite 8 |
 | Quality | Pest 4 (+ Laravel, Livewire plugins), Larastan level 8 on `app/`, `config/`, `routes/` (`phpstan.neon`), arch tests in `tests/Unit/ArchTest.php` (no debug helpers, no `env()` outside config, strict types), Pint (`pint.json`: `laravel` preset + `declare_strict_types`, applied to every PHP file), Husky hooks, pcov for coverage (90% min on `app/`) |
 | Git hooks | Husky 9 (`.husky/`, tracked): `commit-msg` enforces lowercase conventional commits, `pre-commit` runs Pint and `osv-scanner` on `composer.lock`; installed by `npm install` via `prepare` |
-| CI | `.github/workflows/ci.yml`: `quality` (Pint, Larastan), `tests` (PHP 8.3 and 8.4 matrix), `coverage` (pcov, `--min=90`, `shell: bash` so `tee` keeps pipefail); `JEV_FAKE=true`, no secrets |
+| CI | `.github/workflows/ci.yml`: `quality` (Pint, Larastan), `tests` (PHP 8.3 and 8.4 matrix, plus `hotdog:eval --min=100` in fake mode), `coverage` (pcov, `--min=90`, `shell: bash` so `tee` keeps pipefail); `JEV_FAKE=true`, no secrets |
 
 ## Deviations from the default 1331 stack
 
@@ -87,7 +87,7 @@ Domain lives in `app/Hotdog/`; bindings in `app/Providers/HotdogServiceProvider.
 | `App\Hotdog\Samples\SampleCatalogue` / `Sample` | Built | Reads `samples/expected.json` (`file`, `expected`, optional `tricky`); names must match `SAFE_NAME` (no paths, safe in URLs and `wire:click`); `available()` filters to files on disk, so wanted samples can be listed before their photo exists. Singleton from `hotdog.samples_path`; used by the fake driver, thumbnails, `trySample()` and `hotdog:eval` |
 | `SampleThumbnailController` | Built | `GET /samples/{file}/thumbnail` (`samples.thumbnail`): 480px JPEG via the shared `ImageManager` singleton, cached forever by name + mtime + size, 404 for anything unlisted, missing or undecodable |
 | `hotdog:check` | Built | `App\Console\Commands\HotdogCheckCommand`: prints settings (never the key), then `GET /models` and one blank 280px PNG through the real `JevHotdogDetector` (Noul + Box, images header). Runs whenever a key is set, even in fake mode, so setup can be verified before switching; warns on text-only or unlisted models; exits 1 on any failure with the request id |
-| `hotdog:eval` | Planned | Golden-set accuracy over `hotdog.samples_path` |
+| `hotdog:eval` | Built | `App\Console\Commands\HotdogEvalCommand`: each available sample through the app's normaliser and `HotdogDetector` (so it honours `JEV_FAKE`); table plus overall, easy and tricky accuracy; NOT SURE counts as a fail and is tallied separately. `--only=easy|tricky`, `--min=` (exit 1 below it), `--force` (skip the credit prompt Jev mode shows). Per-sample errors are fails and the run continues; a missing or rejected key stops at once. CI runs it in fake mode with `--min=100` to prove every committed sample runs end to end |
 
 ## Host requirements
 
