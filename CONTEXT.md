@@ -10,7 +10,7 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop
 | Runtime | Native WSL, `php artisan dev` locally; `php artisan serve` or Herd for users |
 | Storage | None. Session `file`, cache `file`, queue `sync`, failed jobs `null` |
 | Frontend | Livewire 3 (`WithFileUploads`), Tailwind, Vite |
-| Quality | Pest, Larastan, Pint (`declare_strict_types`), Husky hooks, pcov for coverage (90% min on `app/`) |
+| Quality | Pest, Larastan, Pint (`pint.json`: `laravel` preset + `declare_strict_types`, applied to every PHP file), Husky hooks, pcov for coverage (90% min on `app/`) |
 | Git hooks | Husky 9 (`.husky/`, tracked): `commit-msg` enforces lowercase conventional commits, `pre-commit` runs Pint and `osv-scanner` on `composer.lock`; installed by `npm install` via `prepare` |
 | CI | GitHub Actions, fake driver only, no secrets |
 
