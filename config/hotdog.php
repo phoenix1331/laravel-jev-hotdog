@@ -30,6 +30,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Image normaliser
+    |--------------------------------------------------------------------------
+    |
+    | Driver: auto (Imagick when the extension is loaded, else GD), gd or
+    | imagick. HEIC needs Imagick built with HEIC support. Inputs above the
+    | megapixel limit are refused before decoding to protect memory.
+    |
+    */
+
+    'image_driver' => env('HOTDOG_IMAGE_DRIVER', 'auto'),
+
+    'max_input_megapixels' => (int) env('HOTDOG_MAX_INPUT_MEGAPIXELS', 50),
+
+    /*
+    |--------------------------------------------------------------------------
     | Samples
     |--------------------------------------------------------------------------
     |

@@ -9,6 +9,7 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop
 | Framework | Laravel 13, PHP 8.3+ (developed on 8.4); `composer.json` pins `config.platform.php` to 8.3.0 so the lock resolves Symfony 7.4 LTS rather than Symfony 8 (PHP 8.4+ only) |
 | Runtime | Native WSL, `php artisan dev` locally; `php artisan serve` or Herd for users |
 | Storage | None. Session `file`, cache `file`, queue `sync`, failed jobs `null`; only the `local` disk (Livewire temp) and `s3` remain in `config/filesystems.php` |
+| Images | `intervention/image` 3.11; driver from `hotdog.image_driver` (`auto` = Imagick when loaded, else GD), built in `HotdogServiceProvider::imageManager()` |
 | Frontend | Livewire 3.8 (`WithFileUploads`; brief pins v3 although v4 exists), Tailwind 4 via `@tailwindcss/vite`, Vite 8 |
 | Quality | Pest 4 (+ Laravel, Livewire plugins), Larastan level 8 on `app/`, `config/`, `routes/` (`phpstan.neon`), arch tests in `tests/Unit/ArchTest.php` (no debug helpers, no `env()` outside config, strict types), Pint (`pint.json`: `laravel` preset + `declare_strict_types`, applied to every PHP file), Husky hooks, pcov for coverage (90% min on `app/`) |
 | Git hooks | Husky 9 (`.husky/`, tracked): `commit-msg` enforces lowercase conventional commits, `pre-commit` runs Pint and `osv-scanner` on `composer.lock`; installed by `npm install` via `prepare` |
@@ -34,7 +35,7 @@ Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel
 | File | Keys |
 |------|------|
 | `config/jev.php` | `api_key`, `model` (`jev-preview`), `base_url`, `fake` (default `true`), `timeout` |
-| `config/hotdog.php` | `unsure_min` / `unsure_max` (0.40 / 0.60), `max_upload_kb` (20480), `rate_limit_per_minute` (20), `samples_path` (`base_path('samples')`) |
+| `config/hotdog.php` | `unsure_min` / `unsure_max` (0.40 / 0.60), `max_upload_kb` (20480), `rate_limit_per_minute` (20), `samples_path` (`base_path('samples')`), `image_driver` (`auto`), `max_input_megapixels` (50) |
 
 `env()` is only read in `config/`. `phpunit.xml` forces `JEV_FAKE=true` and an empty key.
 
@@ -44,6 +45,7 @@ Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel
 - **Not sure band** - confidence between `unsure_min` and `unsure_max` shows a third state; confidence always shown
 - **Normalise before sending** - Jev accepts only still PNG/JPEG, 280 to 1568px per side (the docs say 280, not the 256 first assumed), 78,400 to 2,458,624 total pixels, max 16 MiB, and rejects rather than resizes. It also strips EXIF without applying orientation. Every upload is rotated upright, resized and re-encoded as baseline JPEG first
 - **Preview API** - every image request sends `TypeSafe-Danger-Zone-Images: true`; images and Box need Jev 1.14 (`jev-preview` or `jev-1.14.0`; `jev-latest` is still 1.13, text only), so the model is pinned in config
+- **Show the normalised image** - the UI should display `NormalisedImage::$bytes`, not the original upload: padding for extreme aspect ratios shifts the frame, and the box fractions are relative to what Jev saw
 - **Bring your own key** - no key in the repo, tests, fixtures or recordings; fake mode is the default so the UI works straight after cloning
 - **Nothing stored** - uploads live in Livewire temp and are deleted after the result; logs hold only verdict, confidence and latency
 - **No show branding** - no HBO name or logo; one credit line in the README
@@ -75,10 +77,11 @@ Domain lives in `app/Hotdog/`; bindings in `app/Providers/HotdogServiceProvider.
 | `App\Jev\JevClient` | Built | `systemOne()` and `models()` via `Http`: bearer key, images header on every call, two retries with backoff on 429/529 only, `ConnectionException` to timeout/unreachable, failures thrown as `JevException` |
 | `App\Jev\JevError` / `JevException` | Built | Status-based error enum (400, 401/403, 413, 422, 429/529, timeout, unreachable, unexpected, missing key), each with an on-screen message that never includes the key |
 | `JevHotdogDetector` | Built | One Noul (`is_hotdog`) + Box (`hotdog`) request with the image as a UUID-keyed asset; malformed box keeps the verdict and drops the box; logs `hotdog.detected` with verdict, confidence, latency, model, request id only |
-| `ImageNormaliser` | Planned | Intervention Image v3, GD default, Imagick for HEIC |
+| `ImageNormaliser` | Built | Intervention Image 3.11 (brief pins v3 although v4 exists). Accepts JPEG/PNG/WebP/GIF (first frame)/HEIC (Imagick only) by sniffed MIME; refuses inputs over `max_input_megapixels` from the header before decoding; auto-orients, strips metadata, flattens alpha on white; `targetSize()` scales to 280..1568 per side, padding with white when an extreme aspect ratio makes both limits impossible; baseline JPEG q85 |
+| `ImageRejected` | Built | Friendly messages for unsupported format, HEIC without Imagick, damaged file, too many pixels |
 | `HotdogUploader` | Planned | Single Livewire component: upload, validation, rate limit, result |
 | `hotdog:check` / `hotdog:eval` | Planned | Key/model/header check; golden-set accuracy over `hotdog.samples_path` |
 
 ## Host requirements
 
-PHP extensions: `gd` (required for image normalisation), `imagick` (optional, HEIC), `pcov` (coverage).
+PHP extensions: `gd` (required), `exif` (orientation), `imagick` (optional; HEIC also needs ImageMagick built with libheif), `pcov` (coverage). Decoding needs about 4 bytes per pixel, so a 50 MP input needs roughly 200 MB of PHP memory. CI installs `gd, imagick, exif`, and the normaliser tests run against both drivers.

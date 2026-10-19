@@ -51,7 +51,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: gd
+          extensions: gd, imagick, exif
           coverage: none
 
       - uses: actions/setup-node@v7
@@ -81,7 +81,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: gd
+          extensions: gd, imagick, exif
           coverage: pcov
 
       - uses: actions/setup-node@v7

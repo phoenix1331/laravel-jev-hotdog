@@ -6,12 +6,17 @@ use App\Hotdog\ConfidenceBand;
 use App\Hotdog\Contracts\HotdogDetector;
 use App\Hotdog\Detectors\FakeHotdogDetector;
 use App\Hotdog\Detectors\JevHotdogDetector;
+use App\Hotdog\ImageNormaliser;
+use App\Hotdog\ImageRejected;
 use App\Hotdog\NormalisedImage;
 use App\Hotdog\Verdict;
 use App\Jev\JevError;
 use App\Jev\JevException;
+use App\Providers\HotdogServiceProvider;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Intervention\Image\Drivers\Imagick\Driver;
+use Tests\Support\ImageFixtures;
 
 it('binds the fake detector when fake mode is on', function () {
     config(['jev.fake' => true]);
@@ -67,3 +72,25 @@ it('reads expectations from the configured samples path', function () {
     unlink("{$dir}/expected.json");
     rmdir($dir);
 });
+
+it('picks the image driver from config', function (string $setting, string $driver) {
+    if ($driver === Driver::class && ! extension_loaded('imagick')) {
+        $this->markTestSkipped('Imagick is not installed.');
+    }
+
+    expect(HotdogServiceProvider::imageManager($setting)->driver())->toBeInstanceOf($driver);
+})->with([
+    'gd' => ['gd', Intervention\Image\Drivers\Gd\Driver::class],
+    'imagick' => ['imagick', Driver::class],
+    'auto' => ['auto', extension_loaded('imagick') ? Driver::class : Intervention\Image\Drivers\Gd\Driver::class],
+]);
+
+it('rejects an unknown image driver', function () {
+    HotdogServiceProvider::imageManager('vips');
+})->throws(InvalidArgumentException::class, 'HOTDOG_IMAGE_DRIVER must be auto, gd or imagick, got vips.');
+
+it('builds the normaliser with the configured megapixel limit', function () {
+    config(['hotdog.image_driver' => 'gd', 'hotdog.max_input_megapixels' => 10]);
+
+    app(ImageNormaliser::class)->normalise(ImageFixtures::pngHeaderOnly(4000, 3000));
+})->throws(ImageRejected::class, 'the limit is 10');
