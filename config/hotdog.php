@@ -28,4 +28,16 @@ return [
 
     'rate_limit_per_minute' => (int) env('HOTDOG_RATE_LIMIT', 20),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Samples
+    |--------------------------------------------------------------------------
+    |
+    | Golden-set photos and expected.json, used by the fake driver and
+    | by hotdog:eval.
+    |
+    */
+
+    'samples_path' => base_path('samples'),
+
 ];

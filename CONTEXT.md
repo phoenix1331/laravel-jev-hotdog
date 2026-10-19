@@ -34,7 +34,7 @@ Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel
 | File | Keys |
 |------|------|
 | `config/jev.php` | `api_key`, `model` (`jev-preview`), `base_url`, `fake` (default `true`), `timeout` |
-| `config/hotdog.php` | `unsure_min` / `unsure_max` (0.40 / 0.60), `max_upload_kb` (20480), `rate_limit_per_minute` (20) |
+| `config/hotdog.php` | `unsure_min` / `unsure_max` (0.40 / 0.60), `max_upload_kb` (20480), `rate_limit_per_minute` (20), `samples_path` (`base_path('samples')`) |
 
 `env()` is only read in `config/`. `phpunit.xml` forces `JEV_FAKE=true` and an empty key.
 
@@ -59,16 +59,23 @@ Thin `JevClient` on Laravel's HTTP client, not a Packagist SDK. Reviewed package
 
 The app needs one endpoint, two question types and a base64 JSON body, which is a small class; owning it keeps `Http::fake()` tests and the preview header explicit. Exact request, response, limits and error codes: `.claude/docs/jev-api.md`. Recorded in the README later.
 
-## Planned components
+## Components
 
-| Component | Role |
-|-----------|------|
-| `HotdogDetector` contract | `detect(NormalisedImage): HotdogResult`; bound from `jev.fake` |
-| `JevClient` | `POST {base_url}/systemone` and `GET {base_url}/models` via `Http`, bearer key, images header, status-to-exception mapping |
-| `JevHotdogDetector` / `FakeHotdogDetector` | Real API (one Noul + Box request) vs deterministic local answers (from `samples/expected.json` or image hash) |
-| `ImageNormaliser` | Intervention Image v3, GD default, Imagick for HEIC |
-| `HotdogUploader` | Single Livewire component: upload, validation, rate limit, result |
-| `hotdog:check` / `hotdog:eval` | Key/model/header check; golden-set accuracy over `samples/` |
+Domain lives in `app/Hotdog/`; bindings in `app/Providers/HotdogServiceProvider.php`.
+
+| Component | Status | Role |
+|-----------|--------|------|
+| `Verdict` enum | Built | `hotdog` / `not_hotdog` / `unsure` (same values as `expected.json`), `label()` for the banner |
+| `ConfidenceBand` | Built | Noul probability to verdict; both bounds are inside the not sure band (0.60 exactly is NOT SURE). Singleton from `hotdog.unsure_min/max` |
+| `BoundingBox` | Built | Validated 0 to 1 edges; `toCssPercentages()` for the overlay, `toPixels()` for any image size |
+| `NormalisedImage` | Built | In-memory bytes, mime, normalised and original dimensions, original filename; `base64()`, `format()` for the Jev asset |
+| `HotdogResult` | Built | `decide()` maps confidence through the band and drops the box unless HOTDOG |
+| `HotdogDetector` contract | Built | `detect(NormalisedImage): HotdogResult`; resolved from `jev.fake` |
+| `FakeHotdogDetector` | Built | `samples/expected.json` match by basename (tricky entries land nearer the band but stay correct), else a SHA-1 of the bytes drives confidence, box and latency; model `fake` |
+| `JevClient` / `JevHotdogDetector` | Planned | `POST {base_url}/systemone` with one Noul + Box request via `Http`; until built, `JEV_FAKE=false` throws a `LogicException` |
+| `ImageNormaliser` | Planned | Intervention Image v3, GD default, Imagick for HEIC |
+| `HotdogUploader` | Planned | Single Livewire component: upload, validation, rate limit, result |
+| `hotdog:check` / `hotdog:eval` | Planned | Key/model/header check; golden-set accuracy over `hotdog.samples_path` |
 
 ## Host requirements
 
