@@ -51,6 +51,16 @@
             "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],
+        "coverage": [
+            "@php artisan config:clear --ansi @no_additional_args",
+            "@php artisan test --coverage --min=90"
+        ],
+        "lint": [
+            "pint"
+        ],
+        "lint:check": [
+            "pint --test"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
@@ -83,5 +93,12 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts-descriptions": {
+        "dev": "Run the app, Vite, queue and logs together",
+        "test": "Run the test suite",
+        "coverage": "Run tests with pcov coverage, failing below 90%",
+        "lint": "Fix code style with Pint",
+        "lint:check": "Check code style without changing files"
+    }
 }

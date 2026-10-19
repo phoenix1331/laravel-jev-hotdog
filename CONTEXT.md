@@ -19,8 +19,14 @@ Public Laravel 13 playground (`github.com/phoenix1331/laravel-jev-hotdog`): drop
 |---------|------|-----|
 | Docker + FrankenPHP | Native PHP | Clone-and-run in minutes with `composer install`; no containers to learn |
 | MySQL | No database | Nothing is stored; `database/`, `User` model and `config/auth.php` removed |
-| Makefile | Composer scripts | Brief forbids a Makefile; `composer` is already required |
+| Makefile | Composer scripts (`composer.json` `scripts`) | Brief forbids a Makefile; `composer` is already required |
 | pcov in Dockerfile | pcov on host (`php8.4-pcov`) and in CI | No Dockerfile |
+
+## Commands
+
+**composer**: dev | test | coverage (`--min=90`) | lint | lint:check
+
+Composer 2.8+ required: the scripts use the `@no_additional_args` token (Laravel 13 skeleton default).
 
 ## Configuration
 
