@@ -27,6 +27,10 @@ Made by `samples/generate-edge-cases.php` from plain shapes; dedicated to the pu
 | `edge-webp.webp` | WebP: converted to JPEG |
 | `edge-animated.gif` | Three frames: only the first is sent |
 
+## Elsewhere in the repo
+
+`art/app.png`, the screenshot at the top of the README, shows `classic.jpg` (public domain, above) with a box from a real `jev-1.14.0` answer.
+
 ## Wanted
 
 Listed in `expected.json` but not yet added; the app and `hotdog:eval` skip them until the file exists. Use your own photos or CC0 / public domain images, and add a row above when you do. Avoid identifiable people.

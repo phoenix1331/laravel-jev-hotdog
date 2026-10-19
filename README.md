@@ -2,9 +2,7 @@
 
 Drop a photo and find out whether it is a hot dog. A Laravel 13 playground for Jev's image input, using a Noul question for the verdict and a Box question to draw a box around the hot dog.
 
-<!-- Browser recording of the app goes here: art/app.gif -->
-
-![hotdog:eval scoring the bundled sample photos](art/hotdog-eval.gif)
+![The app showing HOTDOG at 98% confidence from jev-1.14.0, with a box drawn around the hot dog](art/app.png)
 
 The idea comes from the "Not Hotdog" app in HBO's *Silicon Valley*. This repo has no connection to the show.
 
@@ -114,6 +112,8 @@ php artisan hotdog:eval                 # every sample
 php artisan hotdog:eval --only=tricky   # just the hard ones
 php artisan hotdog:eval --min=90        # exit with an error below 90%
 ```
+
+![hotdog:eval scoring the bundled sample photos](art/hotdog-eval.gif)
 
 Each available sample goes through the same normaliser and detector as the app, then the command prints a table of results with overall, easy and tricky accuracy. NOT SURE counts as a miss and is also counted separately. In Jev mode it says how many images it is about to send and asks first; `--force` skips the question.
 
